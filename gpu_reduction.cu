@@ -41,14 +41,23 @@ __global__ void Reduction(int* input, int* output, int operation){
 
 
 	if (operation == 0) {
+		output[SIZE] = 0;
 		for (unsigned int stride = blockDim.x; stride >= 1; stride /= 2) {
 		 	
 		 __syncthreads();
-		 
-			 if (SIZE < stride) {
-		 		output[SIZE] += output[SIZE+stride];
+
+	
+			if (SIZE < stride) {
+		 		output[SIZE] += input[SIZE+stride];
 		 	}
+		 
+		 /*
+		 	if (threadIdx.x < stride) {
+		 		output[threadIdx.x] += output[threadIdx.x+stride];
+		 	}
+		 */		
 		}	
+	
 	printf("Sum: %d\n", output[SIZE]);
 	
 	}
@@ -59,8 +68,9 @@ __global__ void Reduction(int* input, int* output, int operation){
 int main(){
 	// allocate memory
 	int *input, *output; 
+	// int sum;	
 	cudaMallocManaged(&input, sizeof(int) * SIZE);
-	cudaMallocManaged(&output, sizeof(int) * SIZE);	
+	cudaMallocManaged(&output, sizeof(int));
 
   	// initialize inputs
   	for (int i = 0; i < SIZE; i++) {
@@ -78,6 +88,7 @@ int main(){
   	 }
  	 printf("\n");
  	*/ 
+ 	printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
 	cudaFree(input);
 	cudaFree(output);
