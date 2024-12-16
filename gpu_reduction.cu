@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define SIZE 2048 // array size
+#define SIZE 4096 // array size
 #define BLOCKSIZE 1024 // number of threads per block
 
 // Sources: https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
@@ -58,22 +58,26 @@ __global__ void Reduction(int* input, int operation){
 
 int main(){
 	// allocate memory
-	// int *input, *output; 
 	int *input;
-	// int output;
-	int x=1; // Number of blocks we're launching
+	// int x=1; // Number of blocks we're launching
+	int x;
 	
 	cudaMallocManaged(&input, SIZE*sizeof(int));
-	// cudaMallocManaged(&output, sizeof(int) * SIZE);
 
   	// initialize inputs
   	for (int i = 0; i < SIZE; i++) {
   		input[i] = 1;
    	}
 
+
+	if (SIZE > 1) {
+		x =  (SIZE + BLOCKSIZE)  / BLOCKSIZE; // calculating the new number of blocks for next iteration 
+		Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
+
+	}
+
+
 	/*
-	x =  (SIZE + BLOCKSIZE - 1) / BLOCKSIZE; // calculating the new number of blocks for next iteration 
-	
 	 // Check if SIZE is a multiple of BLOCK_SIZE
     if (SIZE % BLOCKSIZE != 0) {
       // If not a perfect multiple, calculate the number of blocks needed
@@ -86,9 +90,10 @@ int main(){
       printf("Number of blocks (perfectly divisible): %d\n", x);
     }
     */
-    
+	
+   
   	// Launch the kernel with the calculated number of blocks
-    Reduction<<<x, BLOCKSIZE>>>(input, 0);
+    Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
  	
  	cudaDeviceSynchronize(); 
  	
@@ -97,7 +102,6 @@ int main(){
  	printf("Final Sum: %d\n", input[0]);
 
 	cudaFree(input);
-	// cudaFree(output);
 
 	return 0;
 	
