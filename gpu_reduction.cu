@@ -70,7 +70,7 @@ int main(){
    	}
 
 
-	if (SIZE > 1) {
+	if (SIZE >= 1) {
 		x =  (SIZE + BLOCKSIZE)  / BLOCKSIZE; // calculating the new number of blocks for next iteration 
 		Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
 
