@@ -142,14 +142,23 @@ int main() {
 
     cudaDeviceSynchronize();
 
-    // Sum the results from each block
+    // Sum the results from each block - uncomment when operation is 0
+    /*
     int sum = 0;
     for (int i = 0; i < x; i++) {
         sum += input[i];
     }
-
+    */
+    
+	// Multiply the results from each block - uncomment when operation is 1
+	int product = 1;
+	for (int i = 0; i < x; i++) { 
+	 	product *= input[i]; 
+	}
+	 
     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-    printf("Final Result: %d\n", sum);
+    // printf("Final Sum: %d\n", sum); - uncomment when operation is 0
+    printf("Final Product: %d\n", product);
     //printf("Final Sum: %d\n", input[0]);
 
     // Free memory
