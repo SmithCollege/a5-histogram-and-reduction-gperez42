@@ -13,11 +13,28 @@
 
 __global__ void Reduction(int* input, int operation){
 	__shared__ int sdata[SIZE];
-	unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+	
+	// unsigned int i = blockIdx.x*blockDim.x + threadIdx.x;
+	// each thread handles two elements per iteration when initializing shared memory
+     unsigned int i = blockIdx.x* blockDim.x + threadIdx.x;
+
 	
 	// Initialize shared memory with values from global memory
-	sdata[threadIdx.x] = input[i]; // reads in the first 1000 elements
-	sdata[threadIdx.x + 1024] = input[i+1024];
+	sdata[threadIdx.x] = input[i]; // reads in the first 1024 elements
+	// sdata[threadIdx.x + 1024] = input[i+1024];
+
+	// sdata[threadIdx.x] = input[i] + ((i + blockDim.x) < SIZE ? input[i + blockDim.x] : 0);
+    sdata[threadIdx.x + BLOCKSIZE] = input[i+BLOCKSIZE]; // reads in the next 1024 elements
+
+/*
+		if (i < SIZE) { 
+			sdata[threadIdx.x] = input[i] + ((i + blockDim.x) < SIZE ? input[i + blockDim.x] : 0); 
+		} 
+		else { 
+			sdata[threadIdx.x] = 0; 
+		}
+*/
+	
 	/*
 	 // Initialize shared memory with values from global memory
     if (i < SIZE) {
@@ -59,8 +76,8 @@ __global__ void Reduction(int* input, int operation){
 int main(){
 	// allocate memory
 	int *input;
-	// int x=1; // Number of blocks we're launching
-	int x;
+    //int x=1; // Number of blocks we're launching
+	int x=2;
 	
 	cudaMallocManaged(&input, SIZE*sizeof(int));
 
@@ -70,9 +87,21 @@ int main(){
    	}
 
 
+
 	if (SIZE >= 1) {
-		x =  (SIZE + BLOCKSIZE)  / BLOCKSIZE; // calculating the new number of blocks for next iteration 
-		Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
+		//x =  (SIZE + BLOCKSIZE) / BLOCKSIZE; // calculating the new number of blocks for next iteration 
+		//Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
+
+		x = (SIZE + BLOCKSIZE * 2 - 1) / (BLOCKSIZE * 2);
+		
+		if (x > 1) {
+			Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
+		}
+		else {
+			Reduction<<<x, BLOCKSIZE>>>(input, 0);
+
+		}
+
 
 	}
 
@@ -95,11 +124,24 @@ int main(){
   	// Launch the kernel with the calculated number of blocks
     Reduction<<<x/2, BLOCKSIZE>>>(input, 0);
  	
- 	cudaDeviceSynchronize(); 
+    cudaDeviceSynchronize(); 
+
+	/*
+ 	// Sum the results from each block 
+ 	int sum = 0; 
+ 	for (int i = 0; i < x; i++) { 
+ 		printf("before %d\n", sum);
+ 		sum += input[i]; 
+ 		printf("after %d\n", sum);
+
+ 	}
+ 	*/
  	
  	printf("%s\n", cudaGetErrorString(cudaGetLastError()));
 
  	printf("Final Sum: %d\n", input[0]);
+ 	// printf("Final Sum: %d\n", sum);
+
 
 	cudaFree(input);
 
