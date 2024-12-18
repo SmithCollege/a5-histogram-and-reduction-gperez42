@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define SIZE 4096 // array size
+#define SIZE 2048 // array size
 #define BLOCKSIZE 1024 // number of threads per block
 
 // Sources: https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf, Microsoft Copilot for help managing memory issues
@@ -72,8 +72,18 @@ __global__ void Reduction(int* input, int operation) {
         }
 }
 
+double get_clock() {
+  struct timeval tv; 
+  int ok = gettimeofday(&tv, (void *) 0);
+  if (ok<0) { 
+  	printf("gettimeofday error"); 
+  }
+  return (tv.tv_sec * 1.0 + tv.tv_usec * 1.0E-6);
+}
 
 int main() {
+	double t0 = get_clock();
+
     // Allocate memory
     int *input;
     // int x;
@@ -96,20 +106,20 @@ int main() {
 		}
    
     // Launch the kernel with the calculated number of blocks
-    //Reduction<<<x, BLOCKSIZE>>>(input, 0); // sum
+    Reduction<<<x, BLOCKSIZE>>>(input, 0); // sum
    	//Reduction<<<x, BLOCKSIZE>>>(input, 1); // product
      //Reduction<<<x, BLOCKSIZE>>>(input, 2); // max
-    Reduction<<<x, BLOCKSIZE>>>(input, 3); // min
+    //Reduction<<<x, BLOCKSIZE>>>(input, 3); // min
 
     cudaDeviceSynchronize();
 
     // Sum the results from each block - uncomment when operation is 0
-    /*
+    
     int sum = 0;
     for (int i = 0; i < x; i++) {
         sum += input[i];
     }
-    */
+    
     
     
 	// Multiply the results from each block - uncomment when operation is 1 
@@ -133,25 +143,28 @@ int main() {
 	
 
 	// Find the min from all blocks - uncomment when operation is 3
-	
+	/*
 	int min = input[0];
 		for (int i=0; i < SIZE; i++){
 			if (min > input[i]) {
 				min = input[i];
 			}
 		}
-	
+	*/
 
 	
 	 
     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-    //printf("Final Sum: %d\n", sum); // uncomment when operation is 0
+    printf("Final Sum: %d\n", sum); // uncomment when operation is 0
     //printf("Final Product: %d\n", product); // uncomment when operation is 1
     //printf("Final Max: %d\n", max); // uncomment when operation is 2
-    printf("Final Min: %d\n", min); // uncomment when operation is 3
+    //printf("Final Min: %d\n", min); // uncomment when operation is 3
     
     //printf("Final Sum: %d\n", input[0]);
 
+ 	double t1 = get_clock();
+    printf("time per call: %f s\n", t1-t0);
+    
     // Free memory
     cudaFree(input);
 

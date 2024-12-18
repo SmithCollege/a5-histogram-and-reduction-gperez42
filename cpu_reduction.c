@@ -3,7 +3,7 @@
 #include <math.h>
 #include <sys/time.h>
 
-#define SIZE 50
+#define SIZE 128
 
 int Reduction(int* input, int sum, int product, int max, int min, int operation){
 
@@ -63,7 +63,18 @@ int Reduction(int* input, int sum, int product, int max, int min, int operation)
 	}
 }
 
+double get_clock() {
+  struct timeval tv; 
+  int ok = gettimeofday(&tv, (void *) 0);
+  if (ok<0) { 
+  	printf("gettimeofday error"); 
+  }
+  return (tv.tv_sec * 1.0 + tv.tv_usec * 1.0E-6);
+}
+
 int main(){
+	double t0 = get_clock();
+
 	// allocate memory
 	int* input = (int*) malloc(sizeof(int) * SIZE);
 	// int* output = (int*) malloc(sizeof(int) * SIZE);
@@ -78,6 +89,9 @@ int main(){
 	printf("Product: %d\n", Reduction(input, sum, product, max, min, 1));
 	printf("Max: %d\n", Reduction(input, sum, product, max, min, 2));
 	printf("Min: %d\n", Reduction(input, sum, product, max, min, 3));
+
+	double t1 = get_clock();
+    printf("time per call: %f s\n", t1-t0);
 
 	// Freeing memory
 	free(input);
