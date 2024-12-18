@@ -32,19 +32,7 @@ __global__ void Reduction(int* input, int operation) {
             }
         }
     }
-
-    // Product Operation
-    /*
-	if (operation == 1){
-		product = 1; // can't start at 0 bc everything will be 0 when multiplied, but anything *1 is just itself so 1 is fine
-		for (int i=0; i < SIZE; i++){
-			//output[i] *= input[i];
-			product *= input[i];
-		}	
-		return product;
-
-	}
-	*/
+    
 	if (operation == 1){
 		for (unsigned int stride = 1; stride <= blockDim.x; stride *= 2) {
 	        __syncthreads();
@@ -54,19 +42,6 @@ __global__ void Reduction(int* input, int operation) {
 	    }
 	}
 
-	// Max Operation
-	/*
-	if (operation == 2){
-		max = input[0];
-		for (int i=0; i < SIZE; i++){
-			if (max < input[i]) {
-				max = input[i];
-			}	
-		}	
-		// printf("Max: %d", max);	
-		return max;
-	}
-	*/
 	if (operation == 2) {
 	    //max = sdata[0];
 		for (unsigned int stride = 1; stride <= blockDim.x; stride *= 2) {
@@ -79,19 +54,6 @@ __global__ void Reduction(int* input, int operation) {
 		}
 	}
 
-	// Min Operation
-	/*
-	if (operation == 3){
-		min = input[0];
-		for (int i=0; i < SIZE; i++){
-			if (min > input[i]) {
-				min = input[i];
-			}	
-		}
-		// printf("Min: %d", min);	
-		return min;
-	}
-	*/
 	if (operation == 3) {
 		//min = sdata[0];
 		for (unsigned int stride = 1; stride <= blockDim.x; stride *= 2) {
@@ -136,8 +98,8 @@ int main() {
    
     // Launch the kernel with the calculated number of blocks
     //Reduction<<<x, BLOCKSIZE>>>(input, 0); // sum
-   // Reduction<<<x, BLOCKSIZE>>>(input, 1); // product
-    Reduction<<<x, BLOCKSIZE>>>(input, 2); // max
+   	// Reduction<<<x, BLOCKSIZE>>>(input, 1); // product
+    //Reduction<<<x, BLOCKSIZE>>>(input, 2); // max
     //Reduction<<<x, BLOCKSIZE>>>(input, 3); // min
 
     cudaDeviceSynchronize();
@@ -150,15 +112,40 @@ int main() {
     }
     */
     
-	// Multiply the results from each block - uncomment when operation is 1
+	// Multiply the results from each block - uncomment when operation is 1 
+	/*
 	int product = 1;
 	for (int i = 0; i < x; i++) { 
 	 	product *= input[i]; 
 	}
+	*/
+
+	// Find the max from all blocks - uncomment when operation is 2
+	/*
+	int max = input[0];
+	for (int i=0; i < SIZE; i++){
+		if (max < input[i]) {
+			max = input[i];
+		}
+	}
+	*/
+
+	// Find the min from all blocks - uncomment when operation is 3
+	int min = input[0];
+		for (int i=0; i < SIZE; i++){
+			if (min > input[i]) {
+				min = input[i];
+			}
+		}
+
+	
 	 
     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-    // printf("Final Sum: %d\n", sum); - uncomment when operation is 0
-    printf("Final Product: %d\n", product);
+    //printf("Final Sum: %d\n", sum); // uncomment when operation is 0
+    //printf("Final Product: %d\n", product); // uncomment when operation is 1
+    //printf("Final Max: %d\n", max); // uncomment when operation is 2
+    printf("Final Min: %d\n", min); // uncomment when operation is 3
+    
     //printf("Final Sum: %d\n", input[0]);
 
     // Free memory
@@ -166,9 +153,3 @@ int main() {
 
     return 0;
 }
-
-
-
-
-	        
-	        
