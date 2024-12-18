@@ -1,0 +1,12 @@
+CPU Reduction,
+Size 50,0.000034 s
+Size 128,0.000031 s
+Size 2048,0.000054 s
+,
+GPU Reduction ,
+Size 2048,0.128309 s
+Size 4096,0.150469 s
+,
+GPU Reduction (less divergence),
+Size 2048,0.144252 s
+Size 4096,0.157441 s
