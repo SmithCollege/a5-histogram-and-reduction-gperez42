@@ -25,10 +25,10 @@ __global__ void Reduction(int* input, int operation) {
   	
     // Sum Operation
     if (operation == 0) {
-        for (unsigned int stride = 1; stride <= blockDim.x; stride *= 2) {
+        for (unsigned int stride = blockDim.x; stride >= 1; stride /= 2) {
             __syncthreads();
-            if (threadIdx.x % stride == 0) {
-                sdata[2 * threadIdx.x] += sdata[2 * threadIdx.x + stride];
+            if (threadIdx.x < stride) {
+                sdata[threadIdx.x] += sdata[threadIdx.x + stride];
             }
         }
     }
@@ -97,20 +97,20 @@ int main() {
 		}
    
     // Launch the kernel with the calculated number of blocks
-    //Reduction<<<x, BLOCKSIZE>>>(input, 0); // sum
-   	// Reduction<<<x, BLOCKSIZE>>>(input, 1); // product
+    Reduction<<<x, BLOCKSIZE>>>(input, 0); // sum
+   	//Reduction<<<x, BLOCKSIZE>>>(input, 1); // product
     //Reduction<<<x, BLOCKSIZE>>>(input, 2); // max
-    Reduction<<<x, BLOCKSIZE>>>(input, 3); // min
+    //Reduction<<<x, BLOCKSIZE>>>(input, 3); // min
 
     cudaDeviceSynchronize();
 
     // Sum the results from each block - uncomment when operation is 0
-    /*
+    
     int sum = 0;
     for (int i = 0; i < x; i++) {
         sum += input[i];
     }
-    */
+    
     
 	// Multiply the results from each block - uncomment when operation is 1 
 	/*
@@ -131,20 +131,22 @@ int main() {
 	*/
 
 	// Find the min from all blocks - uncomment when operation is 3
+	/*
 	int min = input[0];
 		for (int i=0; i < SIZE; i++){
 			if (min > input[i]) {
 				min = input[i];
 			}
 		}
+	*/
 
 	
 	 
     printf("%s\n", cudaGetErrorString(cudaGetLastError()));
-    //printf("Final Sum: %d\n", sum); // uncomment when operation is 0
+    printf("Final Sum: %d\n", sum); // uncomment when operation is 0
     //printf("Final Product: %d\n", product); // uncomment when operation is 1
     //printf("Final Max: %d\n", max); // uncomment when operation is 2
-    printf("Final Min: %d\n", min); // uncomment when operation is 3
+    //printf("Final Min: %d\n", min); // uncomment when operation is 3
     
     //printf("Final Sum: %d\n", input[0]);
 
